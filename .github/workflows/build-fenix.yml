@@ -36,12 +36,17 @@ jobs:
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null 2>&1 || true
           $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --list_installed | head -30
 
+      - name: Init submodules
+        run: |
+          git submodule update --init --recursive --depth=1
+
       - name: Free disk space
         run: |
           sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/lib/android/sdk/ndk 2>/dev/null || true
           df -h /
 
       - name: Build ${{ github.event.inputs.variant }}
+        working-directory: fenix
         env:
           GRADLE_OPTS: '-Xmx6g -Dorg.gradle.daemon=false'
         run: |
