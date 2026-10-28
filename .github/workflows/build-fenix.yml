@@ -51,7 +51,21 @@ jobs:
           GRADLE_OPTS: '-Xmx6g -Dorg.gradle.daemon=false'
         run: |
           set -o pipefail
-          ./gradlew ${{ github.event.inputs.variant }} --no-daemon --stacktrace 2>&1 | tail -120
+          ./gradlew ${{ github.event.inputs.variant }} --no-daemon --stacktrace > ../gradle.log 2>&1 || {
+            echo "=== BUILD FAILED ==="
+            grep -n -A 40 "What went wrong" ../gradle.log | head -80
+            echo "=== FIRST ERRORS ==="
+            grep -nE "^e: |error:|FAILED|Caused by" ../gradle.log | head -30
+            exit 1
+          }
+
+      - name: Upload gradle log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gradle-log
+          path: gradle.log
+          retention-days: 3
 
       - name: Collect APKs
         if: always()
